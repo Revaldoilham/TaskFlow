@@ -22,6 +22,7 @@ import 'package:taskflow/theme/app_theme.dart';
 import 'package:taskflow/screens/create_task/create_task_screen.dart';
 import 'package:taskflow/controllers/create_task_controller.dart';
 import 'package:taskflow/screens/profile/profile_screen.dart';
+import 'package:taskflow/controllers/user_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,9 @@ void main() async {
   );
   Get.put(
     CreateTaskController(),
+  );
+  Get.put(
+    UserController(),
   );
 
   runApp(

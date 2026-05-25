@@ -8,6 +8,7 @@ import '../../constants/app_colors.dart';
 
 import '../../controllers/task_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/user_controller.dart';
 
 class ProfileScreen
     extends StatelessWidget {
@@ -26,6 +27,9 @@ class ProfileScreen
 
     final authCtrl =
         Get.find<AuthController>();
+
+    final userCtrl =
+        Get.find<UserController>();
 
     final isDark =
         Theme.of(context)
@@ -189,134 +193,61 @@ class ProfileScreen
               ),
 
               // STATS
+              Obx(() {
+                final stats = userCtrl.statistics;
+                final total = stats['total_tasks'] ?? taskCtrl.tasks.length;
+                final completed = stats['completed_tasks'] ?? taskCtrl.tasks.where((t) => t.isDone).length;
+                final pending = stats['todo_tasks'] ?? taskCtrl.tasks.where((t) => !t.isDone).length;
+                final progressRate = stats['completion_rate_percentage'] ?? _calculateProgress(taskCtrl);
 
-              Row(
-
-                children: [
-
-                  Expanded(
-
-                    child:
-                        _StatCard(
-
-                      title:
-                          'Total',
-
-                      value: taskCtrl
-                          .tasks
-                          .length
-                          .toString(),
-
-                      icon:
-                          Icons
-                              .task_alt_rounded,
-
-                      color:
-                          AppColors
-                              .primary,
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(
+                            title: 'Total',
+                            value: total.toString(),
+                            icon: Icons.task_alt_rounded,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _StatCard(
+                            title: 'Done',
+                            value: completed.toString(),
+                            icon: Icons.check_circle_rounded,
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-
-                  const SizedBox(
-                    width: 12,
-                  ),
-
-                  Expanded(
-
-                    child:
-                        _StatCard(
-
-                      title:
-                          'Done',
-
-                      value: taskCtrl
-                          .tasks
-                          .where(
-                        (task) {
-
-                          return task
-                              .isDone;
-                        },
-                      )
-                          .length
-                          .toString(),
-
-                      icon:
-                          Icons
-                              .check_circle_rounded,
-
-                      color:
-                          AppColors
-                              .success,
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(
+                            title: 'Pending',
+                            value: pending.toString(),
+                            icon: Icons.schedule_rounded,
+                            color: AppColors.warning,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _StatCard(
+                            title: 'Progress',
+                            value: '$progressRate%',
+                            icon: Icons.insights_rounded,
+                            color: AppColors.info,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(
-                height: 12,
-              ),
-
-              Row(
-
-                children: [
-
-                  Expanded(
-
-                    child:
-                        _StatCard(
-
-                      title:
-                          'Pending',
-
-                      value: taskCtrl
-                          .tasks
-                          .where(
-                        (task) {
-
-                          return !task
-                              .isDone;
-                        },
-                      )
-                          .length
-                          .toString(),
-
-                      icon:
-                          Icons
-                              .schedule_rounded,
-
-                      color:
-                          AppColors
-                              .warning,
-                    ),
-                  ),
-
-                  const SizedBox(
-                    width: 12,
-                  ),
-
-                  Expanded(
-
-                    child:
-                        _StatCard(
-
-                      title:
-                          'Progress',
-
-                      value:
-                          '${_calculateProgress(taskCtrl)}%',
-
-                      icon:
-                          Icons
-                              .insights_rounded,
-
-                      color:
-                          AppColors
-                              .info,
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              }),
 
               const SizedBox(
                 height: 26,
@@ -336,14 +267,7 @@ class ProfileScreen
                 subtitle:
                     'Ubah data profile',
 
-                onTap: () {
-
-                  Get.snackbar(
-                    'Info',
-
-                    'Fitur segera hadir',
-                  );
-                },
+                onTap: () => _showEditProfileDialog(context, userCtrl),
               ),
 
               _MenuTile(
@@ -403,8 +327,135 @@ class ProfileScreen
                 onTap: () {},
               ),
 
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Text(
+                    'Aktivitas Terbaru 📜',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    onPressed: userCtrl.fetchActivities,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Obx(() {
+                if (userCtrl.isLoadingActivities.value) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                final list = userCtrl.activities;
+                if (list.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: AppColors.cardShadow,
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Belum ada aktivitas tercatat.',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: list.length > 5 ? 5 : list.length,
+                  itemBuilder: (context, index) {
+                    final act = list[index];
+                    final String type = act['action_type'] ?? 'INFO';
+                    final String desc = act['description'] ?? '';
+                    final String dateStr = act['created_at'] ?? '';
+                    
+                    IconData icon = Icons.info_outline;
+                    Color color = AppColors.info;
+                    if (type == 'CREATE_TASK') {
+                      icon = Icons.add_circle_outline_rounded;
+                      color = AppColors.primary;
+                    } else if (type == 'COMPLETE_TASK') {
+                      icon = Icons.check_circle_outline_rounded;
+                      color = AppColors.success;
+                    } else if (type == 'DELETE_TASK') {
+                      icon = Icons.delete_outline_rounded;
+                      color = AppColors.error;
+                    } else if (type == 'WELCOME') {
+                      icon = Icons.celebration_rounded;
+                      color = AppColors.warning;
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: AppColors.cardShadow,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(icon, color: color, size: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  desc,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  dateStr.isNotEmpty 
+                                      ? dateStr.substring(0, 10) + ' ' + dateStr.substring(11, 16) 
+                                      : 'Baru saja',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }),
+
               const SizedBox(
-                height: 16,
+                height: 24,
               ),
 
               // LOGOUT
@@ -506,6 +557,118 @@ class ProfileScreen
                 ctrl.tasks.length) *
             100)
         .toInt();
+  }
+
+  void _showEditProfileDialog(BuildContext context, UserController userCtrl) {
+    userCtrl.prepopulateForm();
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Edit Profil ✏️',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Perbarui nama atau foto profil Anda',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: userCtrl.nameEditController,
+                decoration: InputDecoration(
+                  labelText: 'Nama Lengkap',
+                  hintText: 'Masukkan nama baru',
+                  prefixIcon: const Icon(Icons.person_outline, size: 20),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: userCtrl.avatarEditController,
+                decoration: InputDecoration(
+                  labelText: 'Avatar URL',
+                  hintText: 'https://example.com/avatar.png',
+                  prefixIcon: const Icon(Icons.image_outlined, size: 20),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: userCtrl.passwordEditController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password Baru (Opsional)',
+                  hintText: 'Kosongkan jika tidak diubah',
+                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.back(),
+                    child: Text(
+                      'Batal',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Obx(() => ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                        onPressed: userCtrl.isLoadingProfile.value
+                            ? null
+                            : () async {
+                                final success = await userCtrl.updateProfile();
+                                if (success) {
+                                  Get.back();
+                                }
+                              },
+                        child: userCtrl.isLoadingProfile.value
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : Text(
+                                'Simpan',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      )),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
