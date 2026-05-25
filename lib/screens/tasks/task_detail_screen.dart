@@ -1,7 +1,11 @@
 // lib/modules/tasks/detail/task_detail_screen.dart
+
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
+
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:intl/intl.dart';
 
 import 'package:taskflow/constants/app_colors.dart';
@@ -9,22 +13,48 @@ import 'package:taskflow/constants/app_constants.dart';
 
 import 'package:taskflow/controllers/task_controller.dart';
 
-import 'package:taskflow/models/task_model.dart';
+import 'package:taskflow/models/local_task_model.dart';
+
 import 'package:taskflow/widgets/app_widgets.dart';
+import 'package:taskflow/controllers/create_task_controller.dart';
 
 class TaskDetailScreen extends StatelessWidget {
-  const TaskDetailScreen({super.key});
+  const TaskDetailScreen({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    final task = Get.arguments as TaskModel;
+  Widget build(
+    BuildContext context,
+  ) {
+    final args = Get.arguments;
+
+    if (args == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(),
+        body: Center(
+          child: Text(
+            'Task tidak ditemukan',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final LocalTaskModel task = args as LocalTaskModel;
+
     final controller = Get.find<TaskController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // App Bar
+          // APP BAR
+
           SliverAppBar(
             expandedHeight: 180,
             pinned: true,
@@ -32,21 +62,35 @@ class TaskDetailScreen extends StatelessWidget {
             foregroundColor: Colors.white,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration:
-                    const BoxDecoration(gradient: AppColors.primaryGradient),
-                padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
+                decoration: const BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                ),
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  80,
+                  20,
+                  20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Row(
                       children: [
-                        PriorityBadge(priority: task.priority),
-                        const SizedBox(width: 8),
-                        StatusBadge(status: task.status),
+                        PriorityBadge(
+                          priority: task.priority,
+                        ),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        StatusBadge(
+                          status: task.status,
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     Text(
                       task.title,
                       style: GoogleFonts.plusJakartaSans(
@@ -62,61 +106,107 @@ class TaskDetailScreen extends StatelessWidget {
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.edit_outlined),
+                icon: const Icon(
+                  Icons.edit_outlined,
+                ),
                 onPressed: () {
-                  Get.snackbar(
-                    'Info',
-                    'Fitur edit task belum tersedia',
-                    snackPosition: SnackPosition.BOTTOM,
+                  final createCtrl = Get.find<CreateTaskController>();
+
+                  createCtrl.prepareEdit(
+                    task,
+                  );
+
+                  Get.toNamed(
+                    '/create-task',
+                    arguments: task,
                   );
                 },
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
+                icon: const Icon(
+                  Icons.more_vert,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                onSelected: (value) {
+                  borderRadius: BorderRadius.circular(
+                    12,
+                  ),
+                ),
+                onSelected: (
+                  value,
+                ) {
                   if (value == 'delete') {
-                    Get.dialog(AlertDialog(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      title: Text('Hapus Tugas',
-                          style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700)),
-                      content: Text('Tindakan ini tidak dapat dibatalkan.',
-                          style: GoogleFonts.plusJakartaSans(
-                              color: AppColors.textSecondary)),
-                      actions: [
-                        TextButton(
-                            onPressed: Get.back,
-                            child: Text('Batal',
-                                style: GoogleFonts.plusJakartaSans())),
-                        TextButton(
-                          onPressed: () {
-                            Get.back();
-                            controller.deleteTask(task.id);
-                            Get.back();
-                          },
-                          child: Text('Hapus  ',
-                              style: GoogleFonts.plusJakartaSans(
-                                  color: AppColors.error,
-                                  fontWeight: FontWeight.w600)),
+                    Get.dialog(
+                      AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            16,
+                          ),
                         ),
-                      ],
-                    ));
+                        title: Text(
+                          'Hapus Tugas',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        content: Text(
+                          'Tindakan ini tidak dapat dibatalkan.',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: Get.back,
+                            child: Text(
+                              'Batal',
+                              style: GoogleFonts.plusJakartaSans(),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Get.back();
+
+                              controller.deleteTask(
+                                task.id,
+                              );
+
+                              Get.back();
+                            },
+                            child: Text(
+                              'Hapus',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: AppColors.error,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   }
                 },
                 itemBuilder: (_) => [
                   PopupMenuItem(
-                    value: 'Hapus',
-                    child: Row(children: [
-                      const Icon(Icons.delete_outline,
-                          size: 16, color: AppColors.error),
-                      const SizedBox(width: 8),
-                      Text('Hapus Tugas',
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.delete_outline,
+                          size: 16,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        Text(
+                          'Hapus Tugas',
                           style: GoogleFonts.plusJakartaSans(
-                              color: AppColors.error, fontSize: 13)),
-                    ]),
+                            color: AppColors.error,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -125,11 +215,12 @@ class TaskDetailScreen extends StatelessWidget {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(
+                20,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Description
                   if (task.description.isNotEmpty)
                     _DetailCard(
                       title: 'Deskripsi',
@@ -142,8 +233,6 @@ class TaskDetailScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-
-                  // Details Grid
                   _DetailCard(
                     title: 'Detail Tugas',
                     child: Column(
@@ -152,148 +241,66 @@ class TaskDetailScreen extends StatelessWidget {
                           icon: Icons.flag_outlined,
                           label: 'Prioritas',
                           value: task.priority,
-                          valueColor: _priorityColor(task.priority),
+                          valueColor: _priorityColor(
+                            task.priority,
+                          ),
                         ),
-                        const Divider(height: 20),
+                        const Divider(
+                          height: 20,
+                        ),
                         _DetailRow(
                           icon: Icons.radio_button_checked_outlined,
                           label: 'Status Tugas',
                           value: task.status,
-                          valueColor: _statusColor(task.status),
+                          valueColor: _statusColor(
+                            task.status,
+                          ),
                         ),
                         if (task.deadline != null) ...[
-                          const Divider(height: 20),
+                          const Divider(
+                            height: 20,
+                          ),
                           _DetailRow(
                             icon: Icons.calendar_today_outlined,
                             label: 'Deadline',
-                            value: DateFormat('MMM d, yyyy')
-                                .format(task.deadline!),
+                            value: DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(
+                              task.deadline!,
+                            ),
                             valueColor: task.isOverdue
                                 ? AppColors.error
                                 : AppColors.textPrimary,
-                            trailing: task.isOverdue
-                                ? Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.error.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      'Overdue',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.error,
-                                      ),
-                                    ),
-                                  )
-                                : null,
                           ),
                         ],
-                        if (task.assignedName != null) ...[
-                          const Divider(height: 20),
-                          _DetailRow(
-                            icon: Icons.person_outline,
-                            label: 'Ditugaskan kepada',
-                            value: task.assignedName!,
+                        if (task.categoryName != null) ...[
+                          const Divider(
+                            height: 20,
                           ),
-                        ],
-                        if (task.projectName != null) ...[
-                          const Divider(height: 20),
                           _DetailRow(
                             icon: Icons.folder_outlined,
-                            label: 'Proyek',
-                            value: task.projectName!,
-                            valueColor: AppColors.primary,
+                            label: 'Kategori',
+                            value: task.categoryName!,
                           ),
                         ],
-                        const Divider(height: 20),
+                        const Divider(
+                          height: 20,
+                        ),
                         _DetailRow(
                           icon: Icons.access_time_outlined,
                           label: 'Dibuat',
-                          value:
-                              DateFormat('MMM d, yyyy').format(task.createdAt),
+                          value: DateFormat(
+                            'dd/MM/yyyy',
+                          ).format(
+                            task.createdAt,
+                          ),
                         ),
                       ],
                     ),
                   ),
-
-                  // Tags
-                  if (task.tags.isNotEmpty)
-                    _DetailCard(
-                      title: 'Tag',
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: task.tags
-                            .map((tag) => Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primarySurface,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                        color:
-                                            AppColors.primary.withOpacity(0.2)),
-                                  ),
-                                  child: Text(
-                                    '#$tag',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                    ),
-
-                  // Change Status
-                  _DetailCard(
-                    title: 'Ubah Status',
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: AppConstants.statuses.map((s) {
-                        final isActive = task.status == s;
-                        return GestureDetector(
-                          onTap: isActive
-                              ? null
-                              : () async {
-                                  await controller.updateStatus(task.id, s);
-                                  Get.back();
-                                },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isActive
-                                  ? _statusColor(s)
-                                  : _statusColor(s).withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isActive
-                                    ? _statusColor(s)
-                                    : _statusColor(s).withOpacity(0.2),
-                              ),
-                            ),
-                            child: Text(
-                              s,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    isActive ? Colors.white : _statusColor(s),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                  const SizedBox(
+                    height: 32,
                   ),
-                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -303,31 +310,37 @@ class TaskDetailScreen extends StatelessWidget {
     );
   }
 
-  Color _priorityColor(String p) {
+  Color _priorityColor(
+    String p,
+  ) {
     switch (p) {
-      case 'Low':
+      case 'low':
         return AppColors.priorityLow;
-      case 'Medium':
+
+      case 'medium':
         return AppColors.priorityMedium;
-      case 'High':
+
+      case 'high':
         return AppColors.priorityHigh;
-      case 'Urgent':
-        return AppColors.priorityUrgent;
+
       default:
         return AppColors.textHint;
     }
   }
 
-  Color _statusColor(String s) {
+  Color _statusColor(
+    String s,
+  ) {
     switch (s) {
-      case 'Todo':
+      case 'todo':
         return AppColors.statusTodo;
-      case 'In Progress':
+
+      case 'in_progress':
         return AppColors.statusInProgress;
-      case 'Review':
-        return AppColors.statusReview;
-      case 'Done':
+
+      case 'done':
         return AppColors.statusDone;
+
       default:
         return AppColors.textHint;
     }
@@ -336,18 +349,30 @@ class TaskDetailScreen extends StatelessWidget {
 
 class _DetailCard extends StatelessWidget {
   final String title;
+
   final Widget child;
 
-  const _DetailCard({required this.title, required this.child});
+  const _DetailCard({
+    required this.title,
+    required this.child,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.only(
+        bottom: 16,
+      ),
+      padding: const EdgeInsets.all(
+        18,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(
+          16,
+        ),
         boxShadow: AppColors.cardShadow,
       ),
       child: Column(
@@ -362,7 +387,9 @@ class _DetailCard extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(
+            height: 12,
+          ),
           child,
         ],
       ),
@@ -372,25 +399,34 @@ class _DetailCard extends StatelessWidget {
 
 class _DetailRow extends StatelessWidget {
   final IconData icon;
+
   final String label;
+
   final String value;
+
   final Color? valueColor;
-  final Widget? trailing;
 
   const _DetailRow({
     required this.icon,
     required this.label,
     required this.value,
     this.valueColor,
-    this.trailing,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppColors.textHint),
-        const SizedBox(width: 10),
+        Icon(
+          icon,
+          size: 16,
+          color: AppColors.textHint,
+        ),
+        const SizedBox(
+          width: 10,
+        ),
         Text(
           label,
           style: GoogleFonts.plusJakartaSans(
@@ -407,7 +443,6 @@ class _DetailRow extends StatelessWidget {
             color: valueColor ?? AppColors.textPrimary,
           ),
         ),
-        if (trailing != null) ...[const SizedBox(width: 6), trailing!],
       ],
     );
   }
