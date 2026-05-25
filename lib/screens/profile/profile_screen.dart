@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_colors.dart';
 
 import '../../controllers/task_controller.dart';
+import '../../controllers/auth_controller.dart';
 
 class ProfileScreen
     extends StatelessWidget {
@@ -22,6 +23,9 @@ class ProfileScreen
 
     final taskCtrl =
         Get.find<TaskController>();
+
+    final authCtrl =
+        Get.find<AuthController>();
 
     final isDark =
         Theme.of(context)
@@ -104,87 +108,78 @@ class ProfileScreen
                   children: [
 
                     // AVATAR
-
-                    Container(
-
-                      width: 95,
-
-                      height: 95,
-
-                      decoration:
-                          BoxDecoration(
-
-                        color:
-                            Colors.white,
-
-                        borderRadius:
-                            BorderRadius
-                                .circular(
-                          100,
+                    Obx(() {
+                      final user = authCtrl.currentUser.value;
+                      final hasAvatar = user?.avatar != null && user!.avatar!.isNotEmpty;
+                      return Container(
+                        width: 95,
+                        height: 95,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(100),
                         ),
-                      ),
-
-                      child: Icon(
-
-                        Icons
-                            .person_rounded,
-
-                        size: 54,
-
-                        color:
-                            AppColors
-                                .primary,
-                      ),
-                    ),
+                        child: Center(
+                          child: hasAvatar
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(100),
+                                  child: Image.network(
+                                    user.avatar!,
+                                    width: 95,
+                                    height: 95,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Text(
+                                      user.initials,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  user?.initials ?? 'U',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                        ),
+                      );
+                    }),
 
                     const SizedBox(
                       height: 18,
                     ),
 
-                    Text(
-
-                      'TaskFlow User',
-
-                      style:
-                          GoogleFonts
-                              .plusJakartaSans(
-
-                        fontSize: 22,
-
-                        fontWeight:
-                            FontWeight
-                                .w800,
-
-                        color:
-                            Colors.white,
-                      ),
-                    ),
+                    Obx(() {
+                      final user = authCtrl.currentUser.value;
+                      return Text(
+                        user?.name ?? 'TaskFlow User',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      );
+                    }),
 
                     const SizedBox(
                       height: 6,
                     ),
 
-                    Text(
-
-                      'Manage Your Productivity Smarter',
-
-                      textAlign:
-                          TextAlign
-                              .center,
-
-                      style:
-                          GoogleFonts
-                              .plusJakartaSans(
-
-                        fontSize: 13,
-
-                        color: Colors
-                            .white
-                            .withOpacity(
-                          0.85,
+                    Obx(() {
+                      final user = authCtrl.currentUser.value;
+                      return Text(
+                        user?.email ?? 'Manage Your Productivity Smarter',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.85),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -416,12 +411,7 @@ class ProfileScreen
 
               GestureDetector(
 
-                onTap: () {
-
-                  Get.offAllNamed(
-                    '/login',
-                  );
-                },
+                onTap: authCtrl.logout,
 
                 child: Container(
 

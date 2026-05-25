@@ -25,6 +25,7 @@ class ApiService {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'X-Tunnel-Skip-AntiPhishing-Page': 'true', // Otomatis melewati halaman peringatan DevTunnels
     };
     if (requireAuth) {
       final token = await _storage.getToken();

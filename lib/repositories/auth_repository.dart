@@ -85,7 +85,16 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
-    await _storage.clearAll();
+    try {
+      final response = await _api.post('/auth/logout', {}, requireAuth: true);
+      if (!response.success) {
+        print('Server logout response error: ${response.message}');
+      }
+    } catch (e) {
+      print('Network logout error: $e');
+    } finally {
+      await _storage.clearAll();
+    }
   }
 
   Future<bool> isLoggedIn() async {

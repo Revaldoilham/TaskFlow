@@ -13,7 +13,7 @@ static const String appSlogan =
 'Manage Your Productivity Smarter';
 
 static const String baseUrl =
-'https://k6f90jg9-3000.asse.devtunnels.ms/api';
+'http://192.168.1.155:3000/api';
 
 // ─────────────────────────────────────
 // STORAGE KEYS
