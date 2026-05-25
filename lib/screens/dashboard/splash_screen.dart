@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:taskflow/constants/app_colors.dart';
 import 'package:taskflow/constants/app_constants.dart';
+import 'package:taskflow/repositories/auth_repository.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -43,15 +44,22 @@ class _SplashScreenState
 
     _fadeController.forward();
 
-    _navigateToLogin();
+    _navigateToNextScreen();
   }
 
-  Future<void> _navigateToLogin() async {
+  Future<void> _navigateToNextScreen() async {
     await Future.delayed(
       const Duration(seconds: 3),
     );
 
-    Get.offAllNamed('/login');
+    final authRepo = AuthRepository();
+    final isLoggedIn = await authRepo.isLoggedIn();
+
+    if (isLoggedIn) {
+      Get.offAllNamed(AppConstants.dashboardRoute);
+    } else {
+      Get.offAllNamed(AppConstants.loginRoute);
+    }
   }
 
   @override

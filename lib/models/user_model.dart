@@ -20,7 +20,7 @@ class UserModel {
     id: json['id'] ?? '',
     name: json['name'] ?? '',
     email: json['email'] ?? '',
-    avatar: json['avatar'],
+    avatar: json['avatar'] ?? json['avatar_url'],
     role: json['role'],
     phone: json['phone'],
   );
